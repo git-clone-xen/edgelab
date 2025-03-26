@@ -171,3 +171,96 @@ while True:
 # Cleanup: release webcam and destroy all OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
+
+# ========================== PERFORMANCE & FUNCTIONALITY ENHANCEMENTS ==========================
+
+# 1. Improve frame rate with grayscale preview instead of full color:
+# Dense flow modifies full-color frames which is computationally heavier.
+# Replace in DenseOpticalFlowByLines:
+# return frame
+# With:
+# return cv2.cvtColor(frame_gray, cv2.COLOR_GRAY2BGR)
+# ➜ This will overlay flow vectors on a lightweight gray background.
+
+# ==============================================================================================
+
+# 2. Adaptive reinitialization of lost points (Lucas-Kanade):
+# When too many points are lost or drift, re-detect features automatically.
+# Replace this:
+# if (p0 is None or len(p0) == 0):
+#     p0 = np.array([[50, 50], [100, 100]], dtype=np.float32).reshape(-1, 1, 2)
+# With:
+# if p0 is None or len(p0) < 10:
+#     p0 = cv2.goodFeaturesToTrack(frame_gray, mask=None, **feature_params)
+# ➜ This prevents "dumb" fallback and keeps tracking responsive.
+
+# ==============================================================================================
+
+# 3. Add performance monitor (frame rate estimator):
+# At top: `import time`
+# Then add before loop:
+# prev_time = time.time()
+# And at bottom inside the loop:
+# fps = 1 / (time.time() - prev_time)
+# prev_time = time.time()
+# cv2.putText(img, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2)
+# ➜ Real-time FPS display helps profile responsiveness.
+
+# ==============================================================================================
+
+# 4. Toggle between dense and sparse tracking using keyboard:
+# Instead of editing code to switch modes, allow pressing 'd' or 's' keys:
+# Add at top of loop:
+# mode = 'dense'  # Global toggle
+# Then inside loop, replace processing block with:
+# if mode == 'dense':
+#     img = DenseOpticalFlowByLines(frame, old_gray)
+# elif mode == 'sparse':
+#     img, old_gray, p0 = LucasKanadeOpticalFlow(frame, old_gray, mask, p0)
+# Then handle key press:
+# key = cv2.waitKey(1) & 0xFF
+# if key == ord('d'):
+#     mode = 'dense'
+# elif key == ord('s'):
+#     mode = 'sparse'
+# elif key == ord('q'):
+#     break
+# ➜ Makes it interactive and lets you test both modes without restarting.
+
+# ==============================================================================================
+
+# 5. Save optical flow screenshots for documentation or analysis:
+# Press 'c' to capture frame:
+# Add under key check:
+# elif key == ord('c'):
+#     cv2.imwrite(f'flow_capture_{int(time.time())}.jpg', img)
+# ➜ Helpful for saving test cases and visual results during runtime.
+
+# ==============================================================================================
+
+# 6. Reduce frame size for faster processing (especially for dense flow):
+# Add before processing:
+# frame = cv2.resize(frame, (320, 240))  # Or 480x360
+# ➜ Much faster, especially on lower-end machines or when real-time speed matters.
+
+# ==============================================================================================
+
+# 7. Record dense flow as video:
+# Useful for post-analysis or training datasets.
+# At top: 
+# fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+# out = cv2.VideoWriter('dense_output.mp4', fourcc, 20.0, (width, height))
+# Then in loop: `out.write(img)`
+# Finally in cleanup: `out.release()`
+
+# ==============================================================================================
+
+# 8. Add motion magnitude thresholding (dense flow):
+# Only draw vectors with meaningful displacement:
+# Replace flow extraction with:
+# magnitude = np.sqrt(fx**2 + fy**2)
+# mask = magnitude > 1.0  # Minimum movement threshold
+# x, y, fx, fy = x[mask], y[mask], fx[mask], fy[mask]
+# ➜ Prevents clutter and highlights real motion.
+
+# ==============================================================================================
