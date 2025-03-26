@@ -10,6 +10,7 @@ boundaries = [
     ([17, 15, 100], [50, 56, 200]),   # Red range
     ([86, 31, 4], [220, 88, 50]),     # Blue range
     ([25, 90, 4], [62, 200, 50])      # Green range
+    ([20, 100, 100], [30, 255, 255])  # Yellow range
 ]
 
 #%% Utility function to normalize images for display
@@ -65,6 +66,7 @@ while True:
         red_img = normalizeImg(output[0])
         green_img = normalizeImg(output[1])
         blue_img = normalizeImg(output[2])
+        yellow_img = normalizeImg(output[3])
 
         # Concatenate original + segmented frames horizontally for visualization
         catImg = cv2.hconcat([frame, red_img, green_img, blue_img])

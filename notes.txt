@@ -1,0 +1,96 @@
+LAB 1 - Setting up
+------
+- Update the system
+sudo apt update
+sudo apt upgrade
+
+- Capture image with webcam
+fswebcam -r 1280x720 --no-banner image.jpg
+
+- Capture a video with webcam
+ffmpeg -f v4l2 -framerate 25 -video_size  640x480 -i /dev/video0 output.mp4
+// using the first connected webcam, format = v4l2 (Video4Linux2, standard video driver model)
+
+- Record an audio clip
+arecord -D plughw:<CardNumber>, <DeviceNumber> -d 10 test.wav
+// -D = specifying audio device, plughw:2,0 = card 2, device 0, -d = duration (seconds)
+
+- Play an audio clip
+aplay test.wav
+
+- Set up virtual environment 
+sudo apt instlal python3-venv
+python3 -m venv myenv
+source myenv/bin/activate
+
+LAB 2 - Audio
+------
+1. Fast Fourier Transform (FFT) - Transforms time domain signal into frequency domain 
+Plot the raw audio wave (amplitude over time), then perform FFT 
+    and plot the spectrum (magnitude of frequencies) 
+
+2. Filtering frequency with a bandpass filter
+Plot the raw audio wave, then create a bandpass filter
+    and plot the waveform of the filtered audio in real time
+
+3. Extract and visualize key audio features, displaying the raw audio wave,
+spectrogram (time-frequency representation), chromagram (pitch class energy), 
+Mel spectrogram (frequency scaled to human perception), 
+and Mel Frequency Cepstral Coefficients (MFCCs)
+
+4. Speech recognition 
+Using online speech recognition APIs, listen from mic and try to identify words
+spoken. Also check if specific Wake Words have been mentioned. 
+
+LAB 3 - Image
+------
+1. Real-time Image processing, segmenting images into RGB images
+Define color boundaries, normalize image pixel values, grab frames from the webcam,
+read a single frame and iterate through the color ranges and create a white mask if the frame is
+within the ranges. Use the mask over the original image to extract the specific pixels. 
+Then call the normalize function to enhance the color of the pixels. 
+
+2. Histogram of Gradients (HoG) widely used for Facial Recognition 
+Convert image to gray scale, then call the feature function to get (H) HoG feature vector and 
+(hogImage) the image visualization of the HoG features. 
+
+3. Real-time Image Feature analysis for face capture & facial landmark extraction
+Define the pre-trained data used by OpenCV face detector to identify faces. Convert image to gray scale 
+cause the pre-trained model works best. Run the model on the gray scaled image to find potential faces. 
+Reurn a NumPy array containing bounding boxes for detected faces.  Loop through each detected face and
+extract the coordinates and dimensions to draw rectangle around the faces. 
+
+4. Face detecction using Mediapipe
+Initialize face mesh, convert the image captured from BGR to RGB for mediapipe. Process the RGB frame with the
+mesh model, and the result object contains information about the detected facial landmark. Draw the mesh and
+facial contour from the facial landmarks detected. 
+
+LAB 4 - Video
+------
+1. Real-time video processing using Optical Flow
+Sparse Optical Flow (Lucas-Kanade): Tracks a set of distinct feature points across frames.
+Dense Optical Flow (Farneback): Estimates motion vectors for all pixels in the frame.
+Define parameters for the Lucas-Kanade flow, write a function to convert frame to gray scale and detect strong corner
+features as the initial points to track. And create a black mask the same size as the frame to draw the motion
+vectors over time. 
+
+2. Hand landmark detection
+Initialize the parameters that control the hand detection and tracking process, and create a HandLandmarker object
+and set configutations. Loop through a list of detected hand, and the landmarks of the hand and draw a small circle
+at each landmark position on the frame (Only index & thumb). And set that if thumb landmark is significantly higher than
+the base of the thumb = thumbs up. And count the number of fingers raised. 
+
+3. Real-time hand gesture recognition
+
+4. Real-time object detection
+
+LAB 5 - Deep Learning
+------
+1. Real-time image classification
+Continuously capture frames and preprocesses to match the model's requirements, run the model through the MobileNetV2 
+model to predict the object and then log the processing speed (FPS).
+
+2. Quantization
+
+LAB 5 - MQTT
+------

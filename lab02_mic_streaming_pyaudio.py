@@ -56,6 +56,7 @@ plt.show(block=False)
 
 audio = pyaudio.PyAudio()  # Create a PyAudio instance
 
+## Note: Capturing audio
 # Open a stream to access the microphone
 stream = audio.open(
     format=FORMAT,             # 16-bit format
@@ -80,10 +81,13 @@ for _ in range(0, RATE // BUFFER * RECORD_SECONDS):
     # === Convert binary audio data to integers ===
     # 'h' means 16-bit signed integers. We unpack BUFFER samples
     data_int = struct.unpack(str(BUFFER) + 'h', data)
+    ## Note: Read a chunk of audio data from the mic, but the data is in raw binary data (bytes)
+    ##   so convert the raw bytes into sequence of numerical values
 
     # === Perform FFT to extract frequency components ===
     start_time = time.time()     # Record time before FFT
     yf = fft(data_int)           # Fast Fourier Transform (complex output)
+    ## Note: Take in a NumPy array of integer audio samples
 
     # Record execution time of FFT and store it
     exec_time.append(time.time() - start_time)

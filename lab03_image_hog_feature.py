@@ -40,11 +40,13 @@ while True:
 
         # === Enhance HOG visualization ===
         # Rescale intensity to the 0–255 range for display
+        ## Note: Normalize the pixels to standard 0-255 range for proper display
         hogImage = exposure.rescale_intensity(hogImage, out_range=(0, 255))
         hogImage = hogImage.astype("uint8")
 
         # Convert the grayscale HOG image to 3-channel RGB so it can be concatenated
         hogImg = cv2.cvtColor(hogImage, cv2.COLOR_GRAY2RGB)
+        ## Note: convert the hogImage to RGB image
 
         # Concatenate original frame and HOG visualization side by side
         catImg = cv2.hconcat([frame, hogImg])
