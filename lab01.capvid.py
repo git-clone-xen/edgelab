@@ -200,3 +200,57 @@ New Features to Add:
 5. Motion-clip exporter
 - Save each motion episde into a separate video file.
 '''
+
+# =================== PERFORMANCE & FEATURE ENHANCEMENTS ====================
+
+# 1. Performance Optimization: Resize for Faster Processing
+# frame1 = cv2.resize(frame1, (320, 240))
+# frame2 = cv2.resize(frame2, (320, 240))
+# - Reduces pixel count and speeds up motion detection.
+# - Useful on low-power systems like Raspberry Pi.
+
+# 2. Morphological Opening to Reduce Noise
+# kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+# opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+# dilated = cv2.dilate(opening, None, iterations=2)
+# - Removes noise before dilation.
+
+# 3. Use cv2.createBackgroundSubtractorMOG2() for adaptive background modeling:
+# mog = cv2.createBackgroundSubtractorMOG2()
+# fgmask = mog.apply(frame)
+# - More stable under lighting changes or dynamic scenes.
+
+# 4. Save Motion Events (Images or Videos)
+# When motion is detected:
+#    cv2.imwrite(f'motion_{time.time()}.jpg', frame1)
+# OR
+#    writer.write(frame1)
+# - Helps archive motion triggers for review.
+
+# 5. Trigger Alerts or Logging
+# Play sound or log timestamp on motion detection:
+# import datetime
+# print(f"Motion detected at {datetime.datetime.now()}")
+
+# 6. Dynamic Contour Area Filtering
+# Instead of a hardcoded 900 value:
+#     if 900 < cv2.contourArea(contour) < 10000:
+# - Filters out both small noise and unusually large flickers (e.g., sudden light change)
+
+# 7. Reduce Processing Rate
+# Add time.sleep(0.1) or process only every nth frame to save CPU
+
+# 8. Use threading for frame capture
+# - Use one thread to continuously grab frames, and another to process.
+# - Reduces lag and improves responsiveness.
+
+# 9. Display FPS for debugging:
+# import time; start = time.time(); ... end = time.time()
+# print(f"FPS: {1/(end-start):.2f}")
+
+# 10. Extend with GUI, Logging or MQTT/Socket Message
+# - Notify a server when motion is detected
+# - Stream alerts to another device
+# - Integrate with cloud storage or dashboards
+
+# ========================================================================

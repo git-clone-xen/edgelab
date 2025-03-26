@@ -112,3 +112,100 @@ print('stream stopped')
 
 # Print average FFT computation time
 print('average execution time = {:.0f} milli seconds'.format(np.mean(exec_time) * 1000))
+
+# ====================== Performance Tips & Feature Enhancements ============================
+
+# 1. Reduce BUFFER size for lower latency (important for real-time responsiveness):
+# BUFFER = 1024 * 4  # Smaller buffer → faster response, but slightly noisier spectrum
+# Adjust RATE // BUFFER * RECORD_SECONDS accordingly if you change BUFFER
+
+# ===========================================================================================
+
+# 2. Normalize input data for consistent FFT scaling and avoid clipping:
+# data_norm = np.array(data_int) / 32768.0  # Convert from int16 to float [-1, 1]
+# yf = fft(data_norm)
+
+# ===========================================================================================
+
+# 3. Use log scaling for better spectrum visibility (especially for quiet sounds):
+# spectrum = 2.0 / BUFFER * np.abs(yf[0:BUFFER // 2])
+# log_spectrum = 10 * np.log10(spectrum + 1e-8)  # Avoid log(0) error
+# line_fft.set_ydata(log_spectrum)
+# ax2.set_ylabel("Log Power (dB)")  # Update label
+
+# ===========================================================================================
+
+# 4. Plot the dominant frequency for pitch or tone tracking:
+# dominant_freq = xf[np.argmax(spectrum)]
+# print(f"Dominant Frequency: {dominant_freq:.1f} Hz")
+
+# ===========================================================================================
+
+# 5. Visualize audio in decibel (dB) scale for clearer interpretation:
+# Convert waveform to dB (approximate RMS-based loudness)
+# rms = np.sqrt(np.mean(np.square(data_int)))
+# db = 20 * np.log10(rms + 1e-10)
+# print(f"Estimated Loudness: {db:.2f} dB")
+
+# ===========================================================================================
+
+# 6. Save waveform and FFT to file for offline analysis:
+# np.save("waveform.npy", data_int)
+# np.save("fft_magnitude.npy", spectrum)
+
+# ===========================================================================================
+
+# 7. Apply a windowing function before FFT to reduce spectral leakage:
+# window = np.hanning(BUFFER)
+# windowed = window * np.array(data_int)
+# yf = fft(windowed)
+
+# ===========================================================================================
+
+# 8. Export FFT computation time statistics:
+# np.savetxt("fft_times.csv", np.array(exec_time) * 1000, delimiter=",")
+# Helps visualize performance over time
+
+# ===========================================================================================
+
+# 9. Add spectrogram-style history (like a scrolling heatmap):
+# Collect all FFT slices → stack → use imshow() for 2D spectrogram plot
+
+# ===========================================================================================
+
+# 10. Detect presence of specific frequency ranges:
+# For example, detect a 1kHz tone:
+# freq_bin = np.argmin(np.abs(xf - 1000))
+# if spectrum[freq_bin] > threshold:
+#     print("1kHz tone detected!")
+
+# ===========================================================================================
+
+# 11. Audio monitoring (loopback output):
+# stream.write(data)  # Play back audio in real-time if needed
+
+# ===========================================================================================
+
+# 12. Plot phase response (optional for signal analysis):
+# phase = np.angle(yf[:BUFFER // 2])
+# plt.plot(xf, phase); plt.title("Phase Spectrum"); plt.show()
+
+# ===========================================================================================
+
+# 13. Downsample input signal before FFT for faster processing (low-frequency focus):
+# from scipy.signal import decimate
+# downsampled = decimate(np.array(data_int), 2)
+# yf = fft(downsampled)
+
+# ===========================================================================================
+
+# 14. Add automatic gain control (AGC) for stable amplitude scaling:
+# data_int = data_int / np.max(np.abs(data_int)) * 5000  # Normalize for plotting range
+
+# ===========================================================================================
+
+# 15. For interactive analysis, log and visualize FFT magnitude over time:
+# magnitude_over_time.append(spectrum)
+# At end, use `imshow()` to display as heatmap (rows = frames, columns = frequency bins)
+
+# ===========================================================================================

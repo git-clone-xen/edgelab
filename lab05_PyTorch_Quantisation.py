@@ -87,3 +87,123 @@ def fuse_modules(model):
                                             ['conv2', 'relu2'],
                                             ['fc1', 'relu3'],
                                             ['fc2', 'relu4']], inplace=True)
+
+# ========================== 🔧 PERFORMANCE & FUNCTIONALITY ENHANCEMENTS ==========================
+
+# 1. Use model.eval() before inference to disable dropout/batchnorm randomness
+# Always evaluate models in inference mode to ensure stable predictions
+# Example:
+# model.eval()
+# test(model, testloader)
+
+# =================================================================================================
+
+# 2. Cache datasets to memory using PersistentWorkers and prefetch_factor (if system has RAM)
+# Speeds up data loading by reducing disk I/O
+# DataLoader(..., persistent_workers=True, prefetch_factor=2)
+
+# Example:
+# trainloader = DataLoader(trainset, batch_size=64, shuffle=True, num_workers=4,
+#                          pin_memory=True, persistent_workers=True, prefetch_factor=2)
+
+# =================================================================================================
+
+# 3. Replace view() with reshape() in forward pass to avoid future errors on non-contiguous tensors
+# Safer and more flexible when handling quantized tensors or inputs coming from custom layers
+# Use:
+# x = x.reshape(x.shape[0], -1)
+# Instead of:
+# x = x.view(x.shape[0], -1)
+
+# =================================================================================================
+
+# 4. Reduce memory consumption using torch.cuda.amp (Automatic Mixed Precision)
+# Available in PyTorch >= 1.6. Boosts training speed using FP16 while maintaining accuracy
+# Usage:
+# scaler = torch.cuda.amp.GradScaler()
+# with torch.cuda.amp.autocast():
+#     output = model(inputs)
+#     loss = criterion(output, labels)
+
+# =================================================================================================
+
+# 5. Try other quantization backends for performance tuning (especially on ARM or Android)
+# Example: QNNPACK, FBGEMM
+# torch.backends.quantized.engine = 'qnnpack' or 'fbgemm'
+
+# =================================================================================================
+
+# 6. Add validation support during training loop to monitor overfitting
+# Allows early stopping, learning rate scheduling, etc.
+# Example structure:
+# if epoch % 1 == 0:
+#     val_acc = test(model, validation_loader)
+
+# =================================================================================================
+
+# 7. Log metrics to TensorBoard for visualization
+# Helps track accuracy/loss/size improvements over time
+# Setup:
+# from torch.utils.tensorboard import SummaryWriter
+# writer = SummaryWriter()
+# writer.add_scalar('Loss/train', loss.item(), epoch)
+
+# =================================================================================================
+
+# 8. Replace CrossEntropyLoss with LabelSmoothingCrossEntropy for noisy data
+# Helps regularize classification model by preventing overconfidence
+# from torch.nn.functional import log_softmax
+# def label_smoothing_loss(pred, target, epsilon=0.1):
+#     n_class = pred.size(1)
+#     one_hot = torch.zeros_like(pred).scatter(1, target.view(-1,1), 1)
+#     one_hot = one_hot * (1 - epsilon) + (1 - one_hot) * epsilon / (n_class - 1)
+#     return (-one_hot * log_softmax(pred, dim=1)).sum(dim=1).mean()
+
+# =================================================================================================
+
+# 9. Benchmark model inference time on CPU vs GPU
+# Helps evaluate quantization speed-up in real-world scenarios
+# import time
+# start = time.time()
+# _ = model(inputs)
+# print(f"Inference Time: {time.time() - start:.3f}s")
+
+# =================================================================================================
+
+# 10. Test multiple qconfigs like 'qnnpack', 'fbgemm', or custom QConfig for optimized performance
+# torch.quantization.get_default_qconfig('fbgemm')
+# torch.quantization.get_default_qconfig('qnnpack')
+# Can affect speed and size differently depending on deployment target
+
+# =================================================================================================
+
+# 11. Export quantized model to TorchScript for deployment
+# scripted_model = torch.jit.script(quantized_model)
+# scripted_model.save("model_quantized.pt")
+# Enables use in C++ or Android-based production systems
+
+# =================================================================================================
+
+# 12. Measure model size with pickle protocol=4 for precise storage estimates (esp. on old systems)
+# torch.save(model.state_dict(), "temp.p", _use_new_zipfile_serialization=False)
+
+# =================================================================================================
+
+# 13. Prune model weights before quantization (experimental for reducing model size further)
+# Use torch.nn.utils.prune to remove unimportant weights
+# import torch.nn.utils.prune as prune
+# prune.l1_unstructured(model.fc1, name='weight', amount=0.3)
+
+# =================================================================================================
+
+# 14. Use learning rate scheduler to stabilize training
+# Helps avoid plateauing or oscillating losses
+# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+# scheduler.step()
+
+# =================================================================================================
+
+# 15. Reduce num_workers from 16 → 4 or 8 if training on laptops (helps avoid CPU thread contention)
+# Especially useful in low-core machines or shared environments (e.g., Colab, Jupyter)
+
+# =================================================================================================

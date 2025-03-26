@@ -133,3 +133,84 @@ while True:
 # Release the camera and close OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
+
+# ========================== PERFORMANCE ENHANCEMENTS & FEATURE ADDITIONS ==========================
+
+# 1. Reduce frame resolution for faster inference:
+# Lowering the resolution (e.g., to 320x240) speeds up model inference time significantly, especially on slower CPUs.
+# Uncomment and adjust:
+# frameWidth = 320
+# frameHeight = 240
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, frameWidth)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frameHeight)
+
+# ================================================================================================
+
+# 2. Limit inference to every Nth frame to reduce CPU usage:
+# Instead of detecting every frame, skip frames for better performance.
+# Add before the loop:
+# frame_count = 0
+# Then inside the loop:
+# frame_count += 1
+# if frame_count % 3 != 0:
+#     continue
+# This runs inference every 3rd frame. Tune based on your performance vs accuracy needs.
+
+# ================================================================================================
+
+# 3. Track detections across frames to improve stability:
+# Add a basic tracker (e.g., OpenCV's `cv2.TrackerKCF_create()`) to smooth detections.
+# Helpful when detection is lost intermittently or flickers.
+
+# ================================================================================================
+
+# 4. Draw detection confidence as a color bar or overlay:
+# Visualizing confidence scores can help users interpret detection strength.
+# Example addition near `cv2.rectangle(...)`:
+# confidence_color = (0, int(probability * 255), 255 - int(probability * 255))  # Green-yellow-red
+# cv2.rectangle(current_frame, start_point, end_point, confidence_color, 3)
+
+# ================================================================================================
+
+# 5. Log detected objects to file:
+# Save detections to a text/CSV file for later analysis or labeling.
+# At the end of each loop:
+# with open("detections.csv", "a") as f:
+#     f.write(f"{time.time()},{category_name},{probability:.2f},{bbox.origin_x},{bbox.origin_y}\n")
+
+# ================================================================================================
+
+# 6. Only display detections above a higher confidence threshold:
+# Adjust dynamically based on object type or use case.
+# if probability < 0.6:
+#     continue  # Skip low-confidence detections
+
+# ================================================================================================
+
+# 7. Save a screenshot or region when a specific object is detected:
+# Useful for alert systems or collecting datasets.
+# if category_name == "person":
+#     timestamp = int(time.time())
+#     cv2.imwrite(f"person_{timestamp}.jpg", current_frame)
+
+# ================================================================================================
+
+# 8. Add sound or UI alert on certain detections:
+# For security systems, trigger a buzzer, play sound, or raise a UI notification.
+# You can integrate `playsound`, `pygame`, or GPIO for Raspberry Pi.
+
+# ================================================================================================
+
+# 9. Send detections to a web dashboard or MQTT topic:
+# Useful in IoT scenarios to stream results to a server or dashboard.
+# Consider adding:
+# import paho.mqtt.publish as publish
+# publish.single("iot/object", payload=category_name, hostname="localhost")
+
+# ================================================================================================
+
+# 10. Optimize result clearing with timestamps (not frame-by-frame):
+# Avoid calling `detection_result_list.clear()` too frequently.
+# Instead, use a TTL (time-to-live) for each detection so transient drops are smoothed.
+
+# ================================================================================================

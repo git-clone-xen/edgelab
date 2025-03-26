@@ -100,3 +100,83 @@ for _ in range(0, RATE // BUFFER * RECORD_SECONDS):
 
 print('stream stopped')  # Notify user that capture ended
 print('average execution time = {:.0f} milli seconds'.format(np.mean(exec_time) * 1000))  # Performance summary
+
+# ====================== Performance Improvements & Feature Enhancements ==========================
+
+# 1. Lower the BUFFER size to reduce latency (especially for real-time apps):
+#    Smaller buffers allow faster updates but may increase CPU load or cause glitches.
+# BUFFER = 1024 * 4  # Try reducing from 16K to 4K for more responsive plots/audio
+
+# ================================================================================================
+
+# 2. Normalize audio before filtering to avoid scaling/overflow issues:
+#    Especially useful if filter response is sensitive to amplitude range.
+# data_norm = data / 32768.0  # Convert int16 to float32 range [-1, 1]
+# yf_norm = sosfilt(sos, data_norm)
+# yf = np.int16(yf_norm * 32768)
+
+# ================================================================================================
+
+# 3. Match filter design sampling rate with `RATE` to avoid distortion:
+#    Your filter is already using fs = 44100 (good), but always double-check if RATE is changed.
+# sos = design_filter(19400, 19600, RATE, 3)
+
+# ================================================================================================
+
+# 4. Add audio playback of the filtered signal for real-time monitoring:
+# sd.play(yf.astype(np.int16), samplerate=RATE)
+
+# ================================================================================================
+
+# 5. Save filtered audio to WAV file for later analysis or debugging:
+# import soundfile as sf
+# sf.write("filtered_audio.wav", yf, RATE)
+
+# ================================================================================================
+
+# 6. Automatically scale the plot Y-axis based on audio amplitude:
+# ax1.set_ylim(min(data), max(data))
+# ax2.set_ylim(min(yf), max(yf))
+
+# ================================================================================================
+
+# 7. Visualize filter frequency response (to verify filter shape):
+# from scipy.signal import sosfreqz
+# w, h = sosfreqz(sos, worN=2000, fs=RATE)
+# plt.plot(w, 20 * np.log10(abs(h)))
+# plt.title("Bandpass Filter Frequency Response")
+# plt.xlabel("Frequency [Hz]")
+# plt.ylabel("Gain [dB]")
+# plt.grid(); plt.show()
+
+# ================================================================================================
+
+# 8. Save processing time per frame for performance analysis:
+# np.savetxt("filter_frame_times.csv", np.array(exec_time) * 1000, delimiter=',')
+
+# ================================================================================================
+
+# 9. Add event detection if filtered signal exceeds energy threshold:
+# if np.max(np.abs(yf)) > 3000:
+#     print("High-frequency signal detected!")
+
+# ================================================================================================
+
+# 10. Plot signal energy over time:
+# energy = np.sum(yf ** 2)
+# energy_values.append(energy)
+# plt.plot(energy_values); plt.title("Filtered Signal Energy"); plt.show()
+
+# ================================================================================================
+
+# 11. Extract frequency-domain features (optional for ML/audio analysis):
+# from scipy.fft import fft
+# fft_mag = np.abs(fft(data))[:BUFFER // 2]
+# plt.plot(fft_mag); plt.title("Magnitude Spectrum"); plt.show()
+
+# ================================================================================================
+
+# 12. Add real-time MFCC or pitch tracking with librosa:
+# import librosa
+# mfcc = librosa.feature.mfcc(y=data.astype(np.float32), sr=RATE, n_mfcc=13)
+# pitch, _ = librosa.piptrack(y=data.astype(np.float32), sr=RATE)

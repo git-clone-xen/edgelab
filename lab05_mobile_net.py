@@ -111,3 +111,99 @@ Explanation of Key Concepts:
 
 - softmax + argmax | Converts raw scores into probabilities and selects the top class.
 '''
+
+# ========================== ⚙️ PERFORMANCE & USABILITY ENHANCEMENTS ===========================
+
+# 1. Set model to evaluation mode before inference
+# Ensures proper behavior of layers like dropout/batchnorm (even for quantized models)
+# net.eval()
+
+# =================================================================================================
+
+# 2. Move model and input to a device (CPU or CUDA) for optimized inference
+# For quantized models, this should stay on CPU; for float32 models, use GPU if available
+# device = torch.device("cuda" if torch.cuda.is_available() and not quantize else "cpu")
+# net = net.to(device)
+# input_batch = input_batch.to(device)
+
+# =================================================================================================
+
+# 3. Use top-k prediction display for richer feedback
+# Helps visualize model confidence and potential confusion
+# Example (already included, uncomment to use):
+# top = list(enumerate(output[0].softmax(dim=0)))
+# top.sort(key=lambda x: x[1], reverse=True)
+# for idx, val in top[:5]:
+#     print(f"{val.item()*100:.2f}% {classes[idx]}")
+
+# =================================================================================================
+
+# 4. Add OpenCV text overlay to show predictions on-screen
+# Example:
+# pred_idx = output.argmax(1).item()
+# pred_label = classes[pred_idx]
+# confidence = output[0].softmax(dim=0)[pred_idx].item()
+# cv2.putText(image, f"{pred_label}: {confidence*100:.1f}%", (10, 30),
+#             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+# =================================================================================================
+
+# 5. Resize input image manually using OpenCV for better stability
+# MobileNetV2 expects 224x224 resolution input; this avoids relying on webcam’s resolution
+# image = cv2.resize(image, (224, 224))
+
+# =================================================================================================
+
+# 6. Add a real-time window for webcam visualization
+# Useful for debugging or demo purposes
+# cv2.imshow("Live Inference", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+# if cv2.waitKey(1) & 0xFF == ord('q'):
+#     break
+
+# =================================================================================================
+
+# 7. Track average inference time over many frames
+# Helps benchmark speed with and without quantization
+# import statistics
+# fps_list = []
+# ...
+# fps_list.append(fps)
+# if len(fps_list) > 100:
+#     print(f"Average FPS (100 frames): {statistics.mean(fps_list):.2f}")
+
+# =================================================================================================
+
+# 8. Export predictions and timestamps to CSV for later analysis
+# import csv
+# with open("predictions.csv", "a", newline="") as f:
+#     writer = csv.writer(f)
+#     writer.writerow([time.time(), pred_label, confidence])
+
+# =================================================================================================
+
+# 9. Add exception handling for smoother debugging
+# try:
+#     ... # inference code
+# except Exception as e:
+#     print("Error:", e)
+
+# =================================================================================================
+
+# 10. Reduce preprocessing overhead by reusing transforms on GPU
+# You can convert transforms to GPU (if working with float models) using:
+# from torchvision.transforms.functional import normalize
+# input_tensor = normalize(torch.tensor(image / 255.).permute(2, 0, 1), ...).to(device)
+
+# =================================================================================================
+
+# 11. Release resources gracefully after loop
+# cap.release()
+# cv2.destroyAllWindows()
+
+# =================================================================================================
+
+# 12. Run inference at lower frame rate to reduce CPU usage (skip frames)
+# if frame_count % 2 == 0:
+#     continue
+
+# =================================================================================================

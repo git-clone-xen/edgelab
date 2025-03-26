@@ -93,3 +93,99 @@ out.release()   # Finalize the output video file
 # Final report
 print(f"✅ Summarization complete. {matched_count} matching frames saved.")
 print(f"🎞️ Output video saved to: {output_video_path}")
+
+# ========================== PERFORMANCE ENHANCEMENTS & FEATURE ADDITIONS ==========================
+
+# 1. Skip frames to speed up processing:
+# Instead of analyzing every frame, analyze every Nth frame (e.g., every 3rd frame).
+# Speeds up processing and reduces output video size.
+# Add at the top of the loop:
+# if frame_idx % 3 != 0:
+#     frame_idx += 1
+#     continue
+# This skips 2 out of every 3 frames — adjust based on use case.
+
+# ================================================================================================
+
+# 2. Save only one image per detection segment:
+# Avoid writing 10 identical consecutive "cell phone" frames.
+# Modify logic to store only the *first* matched frame in a segment:
+# prev_match = False  # Add before the loop
+# Then inside the loop:
+# if match_found and not prev_match:
+#     cv2.imwrite(filename, frame)
+# prev_match = match_found
+
+# ================================================================================================
+
+# 3. Add bounding boxes around matched objects:
+# Helps visualize *what* was detected in the frame.
+# After detecting a match:
+# for detection in detection_result.detections:
+#     category = detection.categories[0]
+#     if category.category_name.lower() == target_object.lower():
+#         bbox = detection.bounding_box
+#         start_point = (bbox.origin_x, bbox.origin_y)
+#         end_point = (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height)
+#         cv2.rectangle(frame, start_point, end_point, (0, 255, 0), 2)
+
+# ================================================================================================
+
+# 4. Save metadata about matches (e.g., frame numbers, timestamps):
+# Useful for indexing or reporting.
+# Add this inside the `if match_found:` block:
+# with open("summary_log.txt", "a") as f:
+#     timestamp = frame_idx / fps
+#     f.write(f"Match @ Frame {frame_idx}, Time: {timestamp:.2f} sec\n")
+
+# ================================================================================================
+
+# 5. Add ETA/progress reporting during processing:
+# Useful for long videos.
+# Every N frames:
+# if frame_idx % 100 == 0:
+#     print(f"Processing frame {frame_idx}...")
+
+# ================================================================================================
+
+# 6. Add size constraints on detections (ignore tiny objects):
+# Skip detections smaller than a threshold (e.g., 10% of frame width/height):
+# if bbox.width < width * 0.1 or bbox.height < height * 0.1:
+#     continue
+
+# ================================================================================================
+
+# 7. Use multiple target objects (not just one):
+# Allow matching against a list of objects instead of one hardcoded name.
+# Replace:
+# target_object = 'cell phone'
+# With:
+# target_objects = ['cell phone', 'laptop', 'keyboard']
+# Then check:
+# if category.category_name.lower() in [obj.lower() for obj in target_objects]:
+
+# ================================================================================================
+
+# 8. Allow fuzzy matching using partial keywords:
+# Useful if you're not sure of the exact category name used in the model.
+# Replace:
+# if category.category_name.lower() == target_object.lower():
+# With:
+# if target_object.lower() in category.category_name.lower():
+
+# ================================================================================================
+
+# 9. Display total video duration and summary video ratio:
+# After processing:
+# total_frames = frame_idx
+# summary_ratio = matched_count / total_frames * 100
+# print(f"Matched frame ratio: {summary_ratio:.2f}% of original video")
+
+# ================================================================================================
+
+# 10. Optional: overlay category label and confidence score on saved frames:
+# Inside the match block:
+# label = f"{category.category_name} ({category.score:.2f})"
+# cv2.putText(frame, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+
+# ================================================================================================

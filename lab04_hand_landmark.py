@@ -179,3 +179,100 @@ while True:
 # Release the webcam and close OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
+
+# ========================== ENHANCEMENT & OPTIMIZATION COMMENTS ==============================
+
+# 1. Save gesture sequences (e.g., finger counts) for ML training or logging:
+# Useful for training a classifier, building datasets, or gesture logging.
+
+# Example:
+# import csv
+# with open("finger_log.csv", "a") as f:
+#     f.write(f"{time.time()},{total_fingers_up}\n")
+
+# ==============================================================================================
+
+# 2. Label individual hands as "Left" or "Right" using handedness info:
+# Use detection_result.handedness to differentiate actions per hand.
+
+# Example:
+# handedness = detection_result.handedness[idx][0].category_name
+# cv2.putText(frame, handedness, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+
+# ==============================================================================================
+
+# 3. Add FPS display for real-time performance tracking:
+# Helps you track inference speed and tweak thresholds or resolution accordingly.
+
+# Example:
+# prev_time = time.time()
+# fps = 1 / (time.time() - prev_time)
+# cv2.putText(frame, f'FPS: {fps:.1f}', (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+
+# ==============================================================================================
+
+# 4. Add gesture control actions (e.g., map number of fingers to app actions):
+# Trigger system events (play/pause, volume up/down, etc.)
+
+# Example:
+# import pyautogui
+# if total_fingers_up == 5:
+#     pyautogui.press("playpause")
+
+# ==============================================================================================
+
+# 5. Apply median filter or sliding window smoothing to finger count:
+# Prevents rapid fluctuation due to slight finger motion/noise.
+
+# Example:
+# from collections import deque
+# finger_buffer = deque(maxlen=5)
+# finger_buffer.append(total_fingers_up)
+# smoothed_fingers = round(np.median(finger_buffer))
+
+# ==============================================================================================
+
+# 6. Reduce frame resolution (e.g., 320x240) for faster inference:
+# Works especially well on resource-limited hardware like Raspberry Pi.
+
+# Example:
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+# ==============================================================================================
+
+# 7. Add gesture-based triggers (e.g., "Thumbs up" = capture photo):
+# Can trigger save events, UI updates, etc.
+
+# Example:
+# if thumbs_up:
+#     cv2.imwrite(f"thumb_{int(time.time())}.jpg", frame)
+
+# ==============================================================================================
+
+# 8. Draw bounding boxes around hands:
+# Adds spatial context, especially useful for UIs or interactive overlays.
+
+# Example:
+# x_vals = [int(landmark.x * frame.shape[1]) for landmark in hand_landmarks]
+# y_vals = [int(landmark.y * frame.shape[0]) for landmark in hand_landmarks]
+# cv2.rectangle(frame, (min(x_vals), min(y_vals)), (max(x_vals), max(y_vals)), (0, 255, 0), 2)
+
+# ==============================================================================================
+
+# 9. Display a dynamic overlay hint (e.g., "Raise all fingers for menu"):
+# Helpful for guiding users during gesture interaction.
+
+# Example:
+# if total_fingers_up == 0:
+#     cv2.putText(frame, "Show all fingers to open menu", (50, frame.shape[0] - 20),
+#                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+
+# ==============================================================================================
+
+# 10. Train your own model with custom gestures (using Model Maker or TF Lite):
+# Go beyond landmark-only processing and classify hand poses.
+
+# Docs: https://developers.google.com/mediapipe/solutions/vision/hand_landmarker
+
+# ==============================================================================================

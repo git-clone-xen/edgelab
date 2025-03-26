@@ -110,3 +110,98 @@ audio.terminate()
 
 print('stream stopped')
 print('average execution time = {:.0f} milli seconds'.format(np.mean(exec_time) * 1000))
+
+# ====================== Performance Improvements & Feature Extensions ============================
+
+# 1. Improve filter responsiveness for real-time by reducing BUFFER size:
+#    A smaller buffer (e.g., 1024 or 2048) reduces latency but increases CPU usage.
+#    Test trade-offs based on system specs.
+# BUFFER = 1024 * 4
+
+# ================================================================================================
+
+# 2. Ensure filter sampling rate (fs) matches the stream RATE:
+#    In your code, `sos` was designed using fs = 48000 but your stream runs at RATE = 44100.
+#    This mismatch causes incorrect filter performance.
+# Fix:
+# sos = design_filter(19400, 19600, RATE, 3)
+
+# ================================================================================================
+
+# 3. Normalize waveform before filtering (helps avoid overflow or instability in filters):
+#    You can normalize audio samples to [-1, 1] before filtering and denormalize after.
+# data_norm = np.array(data_int, dtype=np.float32) / 32768.0
+# yf_norm = sosfilt(sos, data_norm)
+# yf = (yf_norm * 32768).astype(np.int16)
+
+# ================================================================================================
+
+# 4. Add real-time audio playback using `stream.write()`:
+#    You can feed filtered audio back to speakers/headphones for monitoring.
+# stream.write(yf.astype(np.int16).tobytes())
+
+# ================================================================================================
+
+# 5. Record filtered audio to file (WAV):
+#    Useful for reviewing output offline.
+# import wave
+# wf = wave.open("filtered_output.wav", 'wb')
+# wf.setnchannels(CHANNELS)
+# wf.setsampwidth(audio.get_sample_size(FORMAT))
+# wf.setframerate(RATE)
+# wf.writeframes(b''.join([struct.pack('<' + str(len(yf)) + 'h', *yf)]))  # One chunk
+# wf.close()
+
+# ================================================================================================
+
+# 6. Add filter visualization (frequency response):
+#    Helps you verify the shape of your filter in terms of gain and cutoff response.
+# from scipy.signal import sosfreqz
+# w, h = sosfreqz(sos, worN=2000, fs=RATE)
+# plt.plot(w, 20 * np.log10(abs(h)))
+# plt.title("Bandpass Filter Frequency Response")
+# plt.xlabel("Frequency [Hz]")
+# plt.ylabel("Gain [dB]")
+# plt.grid()
+# plt.show()
+
+# ================================================================================================
+
+# 7. Save execution time stats to file for later profiling:
+#    Allows benchmarking/filter comparison across different configurations.
+# np.savetxt("filter_timing_ms.txt", np.array(exec_time) * 1000)
+
+# ================================================================================================
+
+# 8. Use multiprocessing or threading to offload filter + plot updates:
+#    For low-latency systems, separating capture/filter and visualization pipelines
+#    avoids GUI bottlenecks. (Advanced)
+# from threading import Thread
+
+# ================================================================================================
+
+# 9. Combine with frequency-domain features (e.g., FFT or MFCC):
+#    After filtering, you can compute energy spectrum or MFCCs for visualization/classification.
+# fft_data = np.abs(np.fft.rfft(yf))
+# mfcc = librosa.feature.mfcc(y=np.array(yf, dtype=np.float32), sr=RATE, n_mfcc=13)
+
+# ================================================================================================
+
+# 10. Add sound event detection:
+#     Set thresholds to detect sound bursts (e.g., claps or whistles) after filtering.
+# if np.max(np.abs(yf)) > 3000:
+#     print("High energy sound detected!")
+
+# ================================================================================================
+
+# 11. Automatically adjust Y-axis range based on amplitude:
+#     Makes the waveform plot dynamically fit louder/quieter sections.
+# ax1.set_ylim(min(data_int), max(data_int))
+# ax2.set_ylim(min(yf), max(yf))
+
+# ================================================================================================
+
+# 12. For cleaner code, consider storing raw and filtered frames in buffers:
+#     Useful for later saving/analysis/visualization.
+# raw_frames.append(data_int)
+# filtered_frames.append(yf)
